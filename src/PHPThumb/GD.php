@@ -552,6 +552,9 @@ class GD extends PHPThumb
                 case 'T':
                     $cropY = 0;
                     break;
+                case 'TC':
+                    $cropY = ($this->currentDimensions['height'] > 2 * $this->maxHeight)? (intval(($this->currentDimensions['height'] - 2*$this->maxHeight) / 4)) : intval(($this->currentDimensions['height'] - $this->maxHeight) / 2);
+                    break;
                 case 'B':
                     $cropY = intval(($this->currentDimensions['height'] - $this->maxHeight));
                     break;

@@ -462,7 +462,7 @@ class GD extends PHPThumb
      * remaining overflow using the quadrant to get the image to be the size specified.
      *
      * The quadrants available are Top, Bottom, Center, Left, and Right:
-     *
+     * TC quadrant: 25% above the Center if it fits, otherwise Center
      *
      * +---+---+---+
      * |   | T |   |
@@ -875,7 +875,7 @@ class GD extends PHPThumb
                 if ($rawData === false) {
                     header('Content-type: image/png');
                 }
-                imagepng($this->oldImage);
+                imagepng($this->oldImage, null, 9);
                 break;
         }
 
@@ -1151,6 +1151,39 @@ class GD extends PHPThumb
         $this->workingImage = $workingImage;
 
         return $this;
+    }
+    
+    /**
+     * detect if current image is an animated gif
+     * an animated gif contains multiple "frames", with each frame having a
+     * header made up of:
+     *   - a static 4-byte sequence (\x00\x21\xF9\x04)
+     *   - 4 variable bytes
+     *   - a static 2-byte sequence (\x00\x2C)
+     * returns true/false
+     * @return boolean 
+     */
+    public function isAnimatedGIF() {
+        if ($this->remoteImage){
+            return false;
+        }
+        if ($this->format != 'GIF'){
+            return false;
+        }
+        if(!($fh = @fopen($this->fileName, 'rb'))){
+            return false;
+        }
+        $count = 0;
+    
+        // We read through the file til we reach the end of the file, or we've found
+        // at least 2 frame headers
+        while(!feof($fh) && $count < 2) {
+            $chunk = fread($fh, 1024 * 100); //read 100kb at a time
+            $count += preg_match_all('#\x00\x21\xF9\x04.{4}\x00\x2C#s', $chunk, $matches);
+        }
+    
+        fclose($fh);
+        return $count > 1;
     }
 
 
